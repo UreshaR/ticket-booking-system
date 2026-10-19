@@ -69,6 +69,6 @@ app.post('/api/v1/auth/login',
 app.listen(process.env.PORT || 3001, () =>
   console.log('User service running on port', process.env.PORT || 3001));
 
-pool.query('SELECT NOW()')
-  .then(r => console.log('DB connected:', r.rows[0]))
-  .catch(e => console.error('DB error:', e.message));
+// pool.query('SELECT NOW()')
+//   .then(r => console.log('DB connected:', r.rows[0]))
+//   .catch(e => console.error('DB error:', e.message));

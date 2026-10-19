@@ -105,5 +105,27 @@ app.patch('/api/v1/events/:id/reserve',
   }
 );
 
+// RELEASE SEATS (used by the Booking Service to undo a reservation)
+app.patch('/api/v1/events/:id/release',
+  requireAuth,
+  param('id').isInt(),
+  body('quantity').isInt({ min: 1, max: 10 }),
+  validate,
+  async (req, res) => {
+    try {
+      const result = await pool.query(
+        `UPDATE events SET available_seats = LEAST(available_seats + $1, total_seats)
+         WHERE id = $2 RETURNING id, available_seats`,
+        [req.body.quantity, req.params.id]
+      );
+      await redis.del(CACHE_KEY);
+      res.json(result.rows[0] || {});
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Server error' });
+    }
+  }
+);
+
 app.listen(process.env.PORT || 3002, () =>
   console.log('Event service running on port', process.env.PORT || 3002));
