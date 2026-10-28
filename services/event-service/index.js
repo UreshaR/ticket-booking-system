@@ -126,6 +126,41 @@ app.patch('/api/v1/events/:id/release',
     }
   }
 );
+// API v2: same data in a richer shape. v1 keeps working unchanged.
+app.get('/api/v2/events', async (req, res) => {
+  try {
+    let rows;
+    const cached = await redis.get(CACHE_KEY);
+    if (cached) {
+      rows = JSON.parse(cached);
+      res.set('X-Cache', 'HIT');
+    } else {
+      rows = (await pool.query('SELECT * FROM events ORDER BY event_date')).rows;
+      await redis.setEx(CACHE_KEY, CACHE_SECONDS, JSON.stringify(rows));
+      res.set('X-Cache', 'MISS');
+    }
+    res.json({
+      version: 2,
+      count: rows.length,
+      events: rows.map((e) => ({
+        id: e.id,
+        title: e.title,
+        venue: e.venue,
+        date: e.event_date,
+        price: Number(e.price),
+        seats: {
+          total: e.total_seats,
+          available: e.available_seats,
+          sold: e.total_seats - e.available_seats
+        },
+        sold_out: e.available_seats === 0
+      }))
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 
 app.listen(process.env.PORT || 3002, () =>
   console.log('Event service running on port', process.env.PORT || 3002));
