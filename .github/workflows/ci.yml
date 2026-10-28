@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: [user-service, event-service, booking-service, notification-service]
+        service: [user-service, event-service, booking-service, notification-service, review-service]
     defaults:
       run:
         working-directory: services/${{ matrix.service }}
@@ -81,6 +81,9 @@ jobs:
           - { name: event-service, context: services/event-service }
           - { name: booking-service, context: services/booking-service }
           - { name: notification-service, context: services/notification-service }
+          - { name: notification-service, context: services/notification-service }
+          - { name: review-service, context: services/review-service }
+          - { name: gateway, context: gateway }
           - { name: gateway, context: gateway }
     steps:
       - uses: actions/checkout@v4
