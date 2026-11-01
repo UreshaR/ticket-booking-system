@@ -1,0 +1,75 @@
+{
+  "uid": "ticket-booking",
+  "title": "Ticket Booking Overview",
+  "tags": ["ticket-booking"],
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "10s",
+  "time": { "from": "now-30m", "to": "now" },
+  "panels": [
+    {
+      "id": 1, "type": "stat", "title": "Services up (of 5)",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [ { "refId": "A", "expr": "sum(up{job=~\"user-service|event-service|booking-service|notification-service|review-service\"})" } ]
+    },
+    {
+      "id": 2, "type": "stat", "title": "Bookings created",
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [ { "refId": "A", "expr": "sum(bookings_created_total) or vector(0)" } ]
+    },
+    {
+      "id": 3, "type": "stat", "title": "Emails sent",
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [ { "refId": "A", "expr": "sum(notifications_sent_total) or vector(0)" } ]
+    },
+    {
+      "id": 4, "type": "stat", "title": "Failed emails (dead-lettered)",
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [ { "refId": "A", "expr": "sum(notifications_dead_lettered_total) or vector(0)" } ]
+    },
+    {
+      "id": 5, "type": "timeseries", "title": "Requests per second",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] },
+      "targets": [ { "refId": "A", "legendFormat": "{{job}}", "expr": "sum by (job) (rate(http_request_duration_seconds_count{route!~\"/health|/metrics\"}[1m]))" } ]
+    },
+    {
+      "id": 6, "type": "timeseries", "title": "Latency (95th percentile)",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "targets": [ { "refId": "A", "legendFormat": "{{job}}", "expr": "histogram_quantile(0.95, sum by (le, job) (rate(http_request_duration_seconds_bucket{route!~\"/health|/metrics\"}[1m])))" } ]
+    },
+    {
+      "id": 7, "type": "timeseries", "title": "Server errors (5xx) per second",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] },
+      "targets": [ { "refId": "A", "legendFormat": "{{job}}", "expr": "sum by (job) (rate(http_request_duration_seconds_count{status=~\"5..\"}[1m]))" } ]
+    },
+    {
+      "id": 8, "type": "timeseries", "title": "RabbitMQ messages waiting",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [ { "refId": "A", "legendFormat": "ready", "expr": "sum(rabbitmq_queue_messages_ready)" } ]
+    },
+    {
+      "id": 9, "type": "timeseries", "title": "CPU (cores)",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 20 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [ { "refId": "A", "legendFormat": "{{job}}", "expr": "rate(process_cpu_seconds_total{job!~\"prometheus|rabbitmq\"}[1m])" } ]
+    },
+    {
+      "id": 10, "type": "timeseries", "title": "Memory",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 20 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "bytes" }, "overrides": [] },
+      "targets": [ { "refId": "A", "legendFormat": "{{job}}", "expr": "process_resident_memory_bytes{job!~\"prometheus|rabbitmq\"}" } ]
+    }
+  ]
+}
