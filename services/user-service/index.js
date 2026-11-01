@@ -6,7 +6,9 @@ const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 const pool = require('./db');
 
+const { setupMetrics } = require('./metrics');
 const app = express();
+setupMetrics(app);
 app.use(helmet());
 app.use(express.json());
 

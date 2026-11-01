@@ -5,7 +5,9 @@ const { MongoClient } = require('mongodb');
 const { body, query, validationResult } = require('express-validator');
 const { requireAuth } = require('./auth');
 
+const { setupMetrics } = require('./metrics');
 const app = express();
+setupMetrics(app);
 app.use(helmet());
 app.use(express.json());
 
