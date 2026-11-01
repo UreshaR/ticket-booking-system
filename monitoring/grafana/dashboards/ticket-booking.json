@@ -11,8 +11,8 @@
       "id": 1, "type": "stat", "title": "Services up (of 5)",
       "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "targets": [ { "refId": "A", "expr": "sum(up{job=~\"user-service|event-service|booking-service|notification-service|review-service\"})" } ]
-    },
+      "targets": [ { "refId": "A", "expr": "count(sum by (job) (up{job=~\"user-service|event-service|booking-service|notification-service|review-service\"}) > 0)" } ]
+        },
     {
       "id": 2, "type": "stat", "title": "Bookings created",
       "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
