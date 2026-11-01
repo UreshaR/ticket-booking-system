@@ -1,4 +1,9 @@
 require('dotenv').config();
+const promClient = require('prom-client');
+const bookingsCreated = new promClient.Counter({
+  name: 'bookings_created_total',
+  help: 'Total bookings created'
+});
 const express = require('express');
 const helmet = require('helmet');
 const { body, validationResult } = require('express-validator');
@@ -6,7 +11,9 @@ const pool = require('./db');
 const { requireAuth } = require('./auth');
 const rabbit = require('./rabbit');
 
+const { setupMetrics } = require('./metrics');
 const app = express();
+setupMetrics(app);
 app.use(helmet());
 app.use(express.json());
 
@@ -56,6 +63,7 @@ app.post('/api/v1/bookings',
         [req.user.id, event_id, event.title, quantity, total]
       );
       booking = result.rows[0];
+            bookingsCreated.inc();
     } catch (err) {
       console.error('DB error, releasing seats:', err.message);
       // Compensation: give the seats back so they aren't lost

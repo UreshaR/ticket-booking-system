@@ -5,8 +5,9 @@ const { body, param, validationResult } = require('express-validator');
 const pool = require('./db');
 const redis = require('./redis');
 const { requireAuth, requireAdmin } = require('./auth');
-
+const { setupMetrics } = require('./metrics');
 const app = express();
+setupMetrics(app);
 app.use(helmet());
 app.use(express.json());
 
