@@ -37,12 +37,14 @@ jobs:
       - name: Create .env from the example
         run: cp .env.example .env
       - name: Start the full stack
-        run: docker compose up -d --build --wait --wait-timeout 240
+        run: docker compose up -d --build --wait --wait-timeout 300
       - name: Smoke test through the gateway
         run: |
           set -e
           curl -fsk https://localhost:8443/health
           echo
+          curl -fsk https://localhost:8443/ | grep -q '<div id="root">'
+          echo "Web UI is served"
           curl -fsk -X POST https://localhost:8443/api/v1/auth/register \
             -H 'Content-Type: application/json' \
             -d '{"name":"CI User","email":"ci@example.com","password":"password123"}'
@@ -52,17 +54,34 @@ jobs:
             -d '{"email":"ci@example.com","password":"password123"}' | jq -r .token)
           test -n "$TOKEN" && test "$TOKEN" != "null"
           echo "Events returned: $(curl -fsk https://localhost:8443/api/v1/events | jq length)"
+          echo "v2 events: $(curl -fsk https://localhost:8443/api/v2/events | jq .count)"
           curl -fsk -X POST https://localhost:8443/api/v1/bookings \
             -H "Authorization: Bearer $TOKEN" \
             -H 'Content-Type: application/json' \
             -d '{"event_id":1,"quantity":1}'
           echo
+          curl -fsk -X POST https://localhost:8443/api/v1/reviews \
+            -H "Authorization: Bearer $TOKEN" \
+            -H 'Content-Type: application/json' \
+            -d '{"event_id":1,"rating":5,"comment":"CI review"}'
+          echo
+          echo "Reviews: $(curl -fsk 'https://localhost:8443/api/v1/reviews?event_id=1' | jq .count)"
           CODE=$(curl -sk -o /dev/null -w '%{http_code}' -X PATCH https://localhost:8443/api/v1/events/1/reserve)
           echo "Internal route status: $CODE (expected 403)"
           test "$CODE" = "403"
+          CODE=$(curl -sk -o /dev/null -w '%{http_code}' https://localhost:8443/metrics)
+          echo "Public metrics status: $CODE (expected 404)"
+          test "$CODE" = "404"
+      - name: Check monitoring
+        run: |
+          set -e
+          curl -fs --retry 15 --retry-delay 2 --retry-connrefused http://127.0.0.1:9090/-/ready
+          echo
+          curl -fs --retry 15 --retry-delay 2 --retry-connrefused http://127.0.0.1:3000/api/health
+          echo
       - name: Show logs if something failed
         if: failure()
-        run: docker compose logs --tail=60
+        run: docker compose logs --tail=80
       - name: Clean up
         if: always()
         run: docker compose down -v
@@ -81,10 +100,9 @@ jobs:
           - { name: event-service, context: services/event-service }
           - { name: booking-service, context: services/booking-service }
           - { name: notification-service, context: services/notification-service }
-          - { name: notification-service, context: services/notification-service }
           - { name: review-service, context: services/review-service }
           - { name: gateway, context: gateway }
-          - { name: gateway, context: gateway }
+          - { name: web, context: web }
     steps:
       - uses: actions/checkout@v4
       - name: Lowercase the owner name (registries require lowercase)

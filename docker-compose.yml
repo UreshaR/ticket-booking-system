@@ -199,6 +199,15 @@ services:
     depends_on:
       - prometheus
     restart: unless-stopped  
+    # ---------- Web UI ----------
+  web:
+    build: ./web
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/ || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
   # ---------- Gateway (the only public entry point) ----------
   gateway:
     build: ./gateway
