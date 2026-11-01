@@ -1,0 +1,34 @@
+:root { font-family: system-ui, sans-serif; color: #1f2937; background: #f3f4f6; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+.app { max-width: 1000px; margin: 0 auto; padding: 16px; }
+header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+h1 { font-size: 1.4rem; margin: 0; }
+nav { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+button { cursor: pointer; border: 0; border-radius: 8px; padding: 8px 14px; background: #2563eb; color: #fff; font: inherit; }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+nav button { background: transparent; color: #1f2937; }
+nav button.active { background: #dbeafe; }
+button.link { background: transparent; color: #2563eb; padding: 8px 4px; }
+.who { color: #6b7280; font-size: 0.9rem; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+.card { background: #fff; border-radius: 12px; padding: 16px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); }
+.card h3 { margin: 0 0 4px; }
+.price { font-size: 1.2rem; font-weight: 600; margin: 8px 0; }
+.muted { color: #6b7280; font-size: 0.9rem; }
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
+input, select { padding: 8px; border: 1px solid #d1d5db; border-radius: 8px; font: inherit; }
+.row input { flex: 1; min-width: 120px; }
+.auth { max-width: 360px; margin: 24px auto; display: flex; flex-direction: column; gap: 10px; }
+.badge { padding: 2px 8px; border-radius: 999px; font-size: 0.8rem; }
+.badge.green { background: #dcfce7; color: #166534; }
+.badge.red { background: #fee2e2; color: #991b1b; }
+.notice { padding: 10px 14px; border-radius: 8px; margin-bottom: 12px; }
+.notice.ok { background: #dcfce7; color: #166534; }
+.notice.error { background: #fee2e2; color: #991b1b; }
+.error { color: #991b1b; }
+.reviews { margin-top: 12px; border-top: 1px solid #e5e7eb; padding-top: 8px; }
+.review { margin-bottom: 8px; }
+.review p { margin: 2px 0; }
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: 8px; border-bottom: 1px solid #e5e7eb; }
