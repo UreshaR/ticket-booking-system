@@ -1,0 +1,124 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: reviews-db
+  namespace: ticket
+spec:
+  serviceName: reviews-db
+  replicas: 1
+  selector:
+    matchLabels:
+      app: reviews-db
+  template:
+    metadata:
+      labels:
+        app: reviews-db
+    spec:
+      containers:
+        - name: mongo
+          image: mongo:7
+          env:
+            - name: MONGO_INITDB_ROOT_USERNAME
+              value: reviews
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: DB_PASSWORD
+          ports:
+            - containerPort: 27017
+          readinessProbe:
+            exec:
+              command: ["mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+          volumeMounts:
+            - name: data
+              mountPath: /data/db
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: reviews-db
+  namespace: ticket
+spec:
+  selector:
+    app: reviews-db
+  ports:
+    - port: 27017
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: review-service
+  namespace: ticket
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: review-service
+  template:
+    metadata:
+      labels:
+        app: review-service
+    spec:
+      containers:
+        - name: review-service
+          image: ticket-review-service:2.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3005
+          env:
+            - name: PORT
+              value: "3005"
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: DB_PASSWORD
+            - name: MONGO_URL
+              value: mongodb://reviews:$(DB_PASSWORD)@reviews-db:27017/?authSource=admin
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: JWT_SECRET
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3005
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3005
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: review-service
+  namespace: ticket
+spec:
+  selector:
+    app: review-service
+  ports:
+    - port: 3005
